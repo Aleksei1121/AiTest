@@ -3,6 +3,12 @@
 
 .indexPage {
   color: vars.$lightColor;
+  position: relative;
+}
+
+.contentWrapper {
+  position: relative;
+  z-index: 1;
 }
 
 .divWithImage {
@@ -21,7 +27,6 @@
     0px top,
     80px top;
   font-family: 'Bounded';
-  // padding-bottom: 100px;
   height: 55vh;
   min-height: 650px;
 
@@ -29,14 +34,17 @@
     font-family: inherit;
   }
 
+  .header {
+  }
+
   .slogan {
     font-size: 80px;
     display: flex;
-    flex-direction: column;
     position: relative;
+    flex-direction: column;
     left: 10vw;
     font-weight: bold;
-    margin-top: 100px;
+    padding-top: 100px;
     width: 50%;
 
     & > * {

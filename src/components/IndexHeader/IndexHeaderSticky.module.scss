@@ -1,0 +1,245 @@
+@use '@styles/_variables.scss' as vars;
+
+.stickyContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: transparent;
+}
+
+.glassWrapper {
+  padding-top: 20px;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 20px;
+}
+
+.indexHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  color: vars.$darkColor;
+
+  .indexLogo {
+    padding-left: 20px;
+    width: 250px;
+    height: auto;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  .longreadNavLinks {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    color: vars.$lightColor !important;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+
+    @media (max-width: 1900px) {
+      font-size: 14px;
+    }
+
+    & > * {
+      margin: 0 20px;
+      color: vars.$lightColor;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: opacity 0.3s ease;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+
+  .indexLogin {
+    padding-right: 20px;
+
+    .indexLoginBtn {
+      padding: 10px;
+      padding-left: 30px;
+      font-size: 16px;
+      color: vars.$darkBlueColor;
+      border: 2px solid vars.$darkBlueColor;
+      cursor: pointer;
+      background-color: rgba(204, 223, 248, 0.2);
+      border-radius: 0 100px 100px 0;
+      width: 250px;
+      text-align: left;
+      transition: all 0.3s ease;
+
+      @media (max-width: 1920px) {
+        width: 180px;
+        padding-left: 10px;
+        font-size: 12px;
+      }
+
+      &:hover {
+        background-color: rgba(204, 223, 248, 0.4);
+        transform: translateX(5px);
+      }
+    }
+  }
+
+  .navContainer {
+    flex: 1;
+    max-width: 80vw;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .carouselWrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .swiperContainer {
+    width: 100%;
+    padding: 8px 0;
+    max-width: 80vw;
+
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .swiperSlide {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+      transition: all 0.3s ease;
+      a {
+        color: vars.$lightColor !important;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+
+  .navButtonPrev,
+  .navButtonNext {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    z-index: 10;
+  }
+
+  .navButtonPrev:hover,
+  .navButtonNext:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  @media (max-width: 1650px) {
+    .indexLogo {
+      width: 200px;
+    }
+
+    .indexLogin {
+      .indexLoginBtn {
+        padding: 8px;
+        font-size: 14px;
+        width: 200px;
+      }
+    }
+
+    .navContainer {
+      max-width: 50vw;
+    }
+
+    .navButtonPrev,
+    .navButtonNext {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  @media (max-width: 1100px) {
+    padding: 5px 0;
+    gap: 15px;
+
+    .indexLogo {
+      width: 150px;
+      order: 1;
+    }
+
+    .navContainer {
+      order: 2;
+      width: 100%;
+      max-width: 50vw;
+    }
+
+    .indexLogin {
+      order: 3;
+
+      .indexLoginBtn {
+        padding: 5px;
+        padding-left: 10px;
+      }
+    }
+
+    .navButtonPrev,
+    .navButtonNext {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .indexLogo {
+      width: 120px;
+      margin-left: 20px;
+    }
+
+    .indexLogin {
+      .indexLoginBtn {
+        width: 150px;
+        font-size: 12px;
+        padding: 4px 6px;
+        padding-left: 8px;
+      }
+    }
+
+    .navButtonPrev,
+    .navButtonNext {
+      width: 24px;
+      height: 24px;
+      font-size: 10px;
+    }
+  }
+}
