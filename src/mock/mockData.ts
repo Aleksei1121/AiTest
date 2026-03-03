@@ -6,6 +6,7 @@ import {
   User,
   TestPlan,
   TestPlanRun,
+  PlannerTask,
 } from '@interfaces/'
 
 export const mockUsers: User[] = [
@@ -1499,7 +1500,6 @@ export const mockScripts: Script[] = [
     code: '// Фильтры\n',
   },
 ]
-
 // Моковые запуски скриптов
 export const mockScriptRuns: ScriptRun[] = [
   {
@@ -1548,5 +1548,260 @@ export const mockScriptRuns: ScriptRun[] = [
     status: 'успешно',
     triggeredBy: { id: 2, username: 'demo' },
     duration: 85000,
+  },
+]
+
+export const plannerTasks: PlannerTask[] = [
+  {
+    id: 'gen-1',
+    projectId: 1,
+    projectName: 'Автоматизация тестирования Web приложения',
+    owner: 'Иванов И.',
+    startTime: '2026-02-27T10:00:00Z',
+    taskType: 'generation',
+    endTime: '2026-02-27T10:05:00Z',
+    parsingResult: {
+      total: 1,
+      warnings: 0, 
+    },
+    warningTestCases: [], 
+  },
+  {
+    id: 'scriptgen-1',
+    projectId: 1,
+    projectName: 'Автоматизация тестирования Web приложения',
+    owner: 'Иванов И.',
+    startTime: '2026-02-27T11:00:00Z',
+    taskType: 'script_generation',
+    endTime: '2026-02-27T11:10:00Z',
+    scriptGenerationResult: {
+      processedTestCases: 1,
+      generatedScripts: 3,
+    },
+    warningTestCases: [],
+  },
+  {
+    id: 'auto-1',
+    projectId: 1,
+    projectName: 'Автоматизация тестирования Web приложения',
+    owner: 'Иванов И.',
+    startTime: '2026-02-27T12:00:00Z',
+    taskType: 'autotesting',
+    endTime: '2026-02-27T12:25:00Z',
+    autotestingResult: {
+      testPlanName: 'Тест-план #4', 
+      testCases: [{ id: 3, name: 'тест-кейс 3' }], 
+    },
+    warningTestCases: [],
+  },
+
+
+  {
+    id: 'gen-2',
+    projectId: 2,
+    projectName: 'Мобильное приложение iOS',
+    owner: 'Петров П.',
+    startTime: '2026-02-27T13:00:00Z',
+    taskType: 'generation',
+    endTime: '2026-02-27T13:05:00Z',
+    parsingResult: {
+      total: 1,
+      warnings: 0,
+    },
+    warningTestCases: [],
+  },
+  {
+    id: 'scriptgen-2',
+    projectId: 2,
+    projectName: 'Мобильное приложение iOS',
+    owner: 'Петров П.',
+    startTime: '2026-02-27T14:00:00Z',
+    taskType: 'script_generation',
+    endTime: '2026-02-27T14:10:00Z',
+    scriptGenerationResult: {
+      processedTestCases: 1,
+      generatedScripts: 1,
+    },
+    warningTestCases: [],
+  },
+  {
+    id: 'auto-2',
+    projectId: 2,
+    projectName: 'Мобильное приложение iOS',
+    owner: 'Петров П.',
+    startTime: '2026-02-27T15:00:00Z',
+    taskType: 'autotesting',
+    endTime: '2026-02-27T15:25:00Z',
+    autotestingResult: {
+      testPlanName: 'Тест-план #3',
+      testCases: [{ id: 2, name: 'тест-кейс 2' }],
+    },
+    warningTestCases: [],
+  },
+
+  {
+    id: 'gen-3',
+    projectId: 3,
+    projectName: 'Личный проект',
+    owner: 'Сидорова С.',
+    startTime: '2026-02-27T16:00:00Z',
+    taskType: 'generation',
+    endTime: '2026-02-27T16:05:00Z',
+    parsingResult: {
+      total: 1,
+      warnings: 0,
+    },
+    warningTestCases: [],
+  },
+  {
+    id: 'scriptgen-3',
+    projectId: 3,
+    projectName: 'Личный проект',
+    owner: 'Сидорова С.',
+    startTime: '2026-02-27T17:00:00Z',
+    taskType: 'script_generation',
+    endTime: '2026-02-27T17:10:00Z',
+    scriptGenerationResult: {
+      processedTestCases: 1,
+      generatedScripts: 1,
+    },
+    warningTestCases: [],
+  },
+  {
+    id: 'auto-3',
+    projectId: 3,
+    projectName: 'Личный проект',
+    owner: 'Михайлова М.',
+    startTime: '2026-02-27T18:00:00Z',
+    taskType: 'autotesting',
+    endTime: '2026-02-27T18:25:00Z',
+    autotestingResult: {
+      testPlanName: 'Тест-план #1',
+      testCases: [{ id: 1, name: 'тест-кейс 1' }],
+    },
+    warningTestCases: [],
+  },
+  {
+    id: 'auto-3-2',
+    projectId: 3,
+    projectName: 'Личный проект',
+    owner: 'Михайлова М.',
+    startTime: '2026-02-27T19:00:00Z',
+    taskType: 'autotesting',
+    endTime: '2026-02-27T19:25:00Z',
+    autotestingResult: {
+      testPlanName: 'Тест-план #2',
+      testCases: [{ id: 1, name: 'тест-кейс 1' }],
+    },
+    warningTestCases: [],
+  },
+
+  {
+    id: 'gen-4',
+    projectId: 4,
+    projectName: 'Тестовый стенд',
+    owner: 'Кузнецов К.',
+    startTime: '2026-02-27T20:00:00Z',
+    taskType: 'generation',
+    endTime: '2026-02-27T20:05:00Z',
+    parsingResult: {
+      total: 4,
+      warnings: 1, 
+    },
+    warningTestCases: [
+      { id: 5, name: 'тест-кейс 5' },
+      { id: 6, name: 'тест-кейс 6' },
+    ],
+  },
+  {
+    id: 'ref-4',
+    projectId: 4,
+    projectName: 'Тестовый стенд',
+    owner: 'Кузнецов К.',
+    startTime: '2026-02-27T21:00:00Z',
+    taskType: 'refactoring',
+    endTime: '2026-02-27T21:20:00Z',
+    refactoringResult: {
+      totalChecked: 4,
+      unchanged: 3, 
+      draftNewVersions: 1, 
+    },
+    warningTestCases: [
+      { id: 7, name: 'тест-кейс 7' },
+    ],
+  },
+  {
+    id: 'newf-4',
+    projectId: 4,
+    projectName: 'Тестовый стенд',
+    owner: 'Кузнецов К.',
+    startTime: '2026-02-27T22:00:00Z',
+    taskType: 'new_feature_generation',
+    endTime: '2026-02-27T22:15:00Z',
+    newFeatureResult: {
+      totalChecked: 4,
+      newDraft: 1, 
+      deprecated: 0, 
+    },
+    warningTestCases: [],
+  },
+  {
+    id: 'scriptgen-4',
+    projectId: 4,
+    projectName: 'Тестовый стенд',
+    owner: 'Кузнецов К.',
+    startTime: '2026-02-27T23:00:00Z',
+    taskType: 'script_generation',
+    endTime: '2026-02-27T23:10:00Z',
+    scriptGenerationResult: {
+      processedTestCases: 4,
+      generatedScripts: 1,
+    },
+    warningTestCases: [],
+  },
+  {
+    id: 'scriptref-4',
+    projectId: 4,
+    projectName: 'Тестовый стенд',
+    owner: 'Кузнецов К.',
+    startTime: '2026-02-28T00:00:00Z',
+    taskType: 'script_refactoring',
+    endTime: '2026-02-28T00:30:00Z',
+    scriptRefactoringResult: {
+      totalChecked: 1,
+      unchanged: 1, 
+      draftNewVersions: 0, 
+    },
+    warningTestCases: [],
+  },
+  {
+    id: 'newscript-4',
+    projectId: 4,
+    projectName: 'Тестовый стенд',
+    owner: 'Кузнецов К.',
+    startTime: '2026-02-28T01:00:00Z',
+    taskType: 'new_script_generation',
+    endTime: '2026-02-28T01:05:00Z',
+    newScriptGenerationResult: {
+      createdScripts: 3, 
+    },
+    warningTestCases: [],
+  },
+  {
+    id: 'auto-4',
+    projectId: 4,
+    projectName: 'Тестовый стенд',
+    owner: 'Кузнецов К.',
+    startTime: '2026-02-28T02:00:00Z',
+    taskType: 'autotesting',
+    endTime: '2026-02-28T02:25:00Z',
+    autotestingResult: {
+      testPlanName: 'Тест-план #5',
+      testCases: [
+        { id: 5, name: 'тест-кейс 5' },
+        { id: 6, name: 'тест-кейс 6' },
+      ],
+    },
+    warningTestCases: [],
   },
 ]

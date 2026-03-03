@@ -28,6 +28,7 @@ import {
   mockTestCases,
   mockTokens,
   mockUsers,
+  plannerTasks,
 } from '../mock/mockData'
 import { UpdateProfileData, UpdateSettingsData } from '../api/users'
 
@@ -971,6 +972,19 @@ class MockApiService {
       includeNegative,
     })
   }
+async getPlannerTasks(): Promise<PlannerTask[]> {
+  console.log('getPlannerTasks called');
+  await delay(500);
+  return plannerTasks; 
+}
+
+async getPlannerTaskDetails(id: string): Promise<PlannerTask | undefined> {
+  console.log('getPlannerTaskDetails called with id:', id);
+  await delay(300);
+  const found = plannerTasks.find(task => task.id === id);
+  console.log('Found task:', found);
+  return found;
+}
 }
 
 export const mockApiService = new MockApiService()

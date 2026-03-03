@@ -1,0 +1,159 @@
+@use '@styles/_variables.scss' as vars;
+
+.pageContainer {
+  padding: 20px;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.headerSection {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  h1 {
+    font-family: 'Bounded';
+    margin-bottom: 8px;
+    color: vars.$darkColor;
+    font-size: 28px;
+  }
+
+  .projectInfo {
+    color: #6c757d;
+    font-size: 14px;
+    line-height: 1.4;
+
+    strong {
+      color: vars.$darkColor;
+      font-weight: 600;
+    }
+  }
+}
+
+.tableContainer {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.8fr 1.8fr 1.5fr 1.5fr 100px;
+  background-color: #f7fafc;
+  font-weight: 600;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #4a5568;
+  font-size: 14px;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.8fr 1.8fr 1.5fr 1.5fr 100px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+  font-size: 14px;
+  color: #2d3748;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: #f7fafc;
+  }
+}
+
+.detailsButton {
+  padding: 6px 16px;
+  background-color: transparent;
+  border: 1px solid vars.$darkColor;
+  border-radius: 6px;
+  color: vars.$darkColor;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: vars.$darkColor;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.loadingContainer {
+  text-align: center;
+  padding: 100px 20px;
+
+  .loadingSpinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: vars.$darkColor;
+    border-radius: 50%;
+    animation: spin 0.8s ease-in-out infinite;
+    margin-bottom: 24px;
+  }
+
+  p {
+    color: #718096;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.errorContainer {
+  text-align: center;
+  padding: 60px 40px;
+  max-width: 600px;
+  margin: 60px auto;
+  background-color: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 12px;
+
+  h3 {
+    color: #c53030;
+    margin-bottom: 16px;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  p {
+    color: #9b2c2c;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  .backLink {
+    display: inline-block;
+    padding: 10px 24px;
+    background-color: vars.$darkColor;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #2d3748;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  }
+}

@@ -86,7 +86,7 @@ export const useSidebarNavigation = () => {
     },
     {
       title: 'Планировщик',
-      link: '#',
+      link: `${PAGE_ENDPOINTS.OUTLET}/planner`,  
       requireAuth: true,
       children: [
         {

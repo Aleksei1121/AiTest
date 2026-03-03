@@ -23,6 +23,9 @@ import {
   ProjectOutlet,
 } from './pages'
 
+import PlannerPage from './pages/PlannerPages/PlannerPage';
+import TaskDetailsPage from './pages/PlannerPages/TaskDetailsPage';
+
 import './index.css'
 import {
   CreateTestCase,
@@ -202,6 +205,14 @@ const router = createBrowserRouter([
       {
         path: `${PAGE_ENDPOINTS.ACCOUNT.INDEX}/${PAGE_ENDPOINTS.ACCOUNT.VIEW_ACCOUNT}`,
         element: <ViewProfileTab />,
+      },
+      {
+        path: 'planner',
+        element: <PlannerPage />,
+      },
+      {
+        path: 'planner/task/:id',
+        element: <TaskDetailsPage />,
       },
       {
         path: '*',
