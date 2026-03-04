@@ -6,11 +6,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ProjectTestCaseTable } from '../../components/ProjectTestCaseTable/ProjectTestCaseTable'
 import styles from './ProjectTestCases.module.scss'
 import { Breadcrumbs, QuestionDialog } from '@components/'
-import { TestCase, TestCaseStatus } from '@interfaces/'
+import { TestCase, TestCaseStatus, UserRole } from '@interfaces/'
 import { MassOperationsTab, LoadFromExcelBtn } from '../../components'
 
 export const ProjectTestCases: React.FC = () => {
-  const { project } = useProject()
+  const { project, checkAccess } = useProject()
   const {
     allTestCases: testCases,
     isLoading,
@@ -24,7 +24,6 @@ export const ProjectTestCases: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'table' | 'operations'>('table')
   const [deleteIds, setDeleteIds] = useState<number[]>([])
   const [refactorIds, setRefactorIds] = useState<number[]>([])
-  const [includeNegative, setIncludeNegative] = useState(false)
   const [totalTCPositive, setTotalTCPositive] = useState(0)
   const [newTCPositive, setNewTCPositive] = useState(0)
   const [newTCNegative, setNewTCNegative] = useState(0)
@@ -76,11 +75,9 @@ export const ProjectTestCases: React.FC = () => {
 
   const handleRefactorSelected = () => {
     console.log('Рефакторинг выбранных ТК:', refactorIds)
-    console.log('Include negative:', includeNegative)
     // API вызов: POST /api/projects/{projectId}/test-cases/refactor-selected
-    // body: { testCaseIds: refactorIds, includeNegative }
+    // body: { testCaseIds: refactorIds }
     setRefactorIds([])
-    setIncludeNegative(false)
     setShowRefactorDialog(false)
   }
 
@@ -173,21 +170,26 @@ export const ProjectTestCases: React.FC = () => {
     )
   }
 
-
   return (
     <div className={styles.pageContainer}>
       <div className={styles.headerSection}>
         <div>
-        <h1>Тест-кейсы проекта</h1>
-        <p className={styles.projectInfo}>
-          Проект: <strong>{project?.name}</strong> | Всего тест-кейсов:{' '}
-          <strong>{filteredCases.length}</strong>
-        </p>
+          <h1>Тест-кейсы проекта</h1>
+          <p className={styles.projectInfo}>
+            Проект: <strong>{project?.name}</strong> | Всего тест-кейсов:{' '}
+            <strong>{filteredCases.length}</strong>
+          </p>
         </div>
-        <LoadFromExcelBtn
-         projectId={project?.id || -1}
-         className={styles.excelBtn}
-         />
+        {checkAccess([
+          UserRole.TESTER,
+          UserRole.PROJECT_ADMIN,
+          UserRole.ANALYST,
+        ]) && (
+          <LoadFromExcelBtn
+            projectId={project?.id || -1}
+            className={styles.excelBtn}
+          />
+        )}
       </div>
 
       {/* Вкладки */}
@@ -199,12 +201,18 @@ export const ProjectTestCases: React.FC = () => {
           >
             База тест-кейсов
           </button>
-          <button
-            className={`${styles.tab} ${activeTab === 'operations' ? styles.activeTab : ''}`}
-            onClick={() => setActiveTab('operations')}
-          >
-            Генерация ТК
-          </button>
+          {checkAccess([
+            UserRole.TESTER,
+            UserRole.PROJECT_ADMIN,
+            UserRole.ANALYST,
+          ]) && (
+            <button
+              className={`${styles.tab} ${activeTab === 'operations' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('operations')}
+            >
+              Генерация ТК
+            </button>
+          )}
         </div>
 
         <div className={styles.tabContent}>
@@ -217,7 +225,11 @@ export const ProjectTestCases: React.FC = () => {
               onEditCase={handleEditCase}
               projectBaseUrl={getProjectBaseUrl()}
             />
-          ) : (
+          ) : checkAccess([
+              UserRole.TESTER,
+              UserRole.PROJECT_ADMIN,
+              UserRole.ANALYST,
+            ]) ? (
             <MassOperationsTab
               totalTCPositive={totalTCPositive}
               totalTCNegative={filteredCases.length - totalTCPositive}
@@ -227,6 +239,8 @@ export const ProjectTestCases: React.FC = () => {
               onGenerateNew={handleGenerateNew}
               onRefactorAll={handleRefactorAll}
             />
+          ) : (
+            <></>
           )}
         </div>
       </div>
@@ -254,8 +268,10 @@ export const ProjectTestCases: React.FC = () => {
             },
             {} as Record<number, TestCase>
           )
-        ).map((el) => (
-          <div key={el.id}>{el.name}</div>
+        ).map((tc) => (
+          <div key={tc.id} className={styles.selectedItem}>
+            {tc.name} (ID: {tc.id})
+          </div>
         ))}
         <div className={styles.archiveSuggestionDiv}>
           Вместо этого вы можете
@@ -274,72 +290,30 @@ export const ProjectTestCases: React.FC = () => {
         onYesClick={handleRefactorSelected}
         onNoClick={() => {
           setRefactorIds([])
-          setIncludeNegative(false)
         }}
       >
-        <div className={styles.dialogContent}>
-          <h3>Рефакторинг выбранных тест-кейсов</h3>
-          <p>
-            Будет оптимизировано:{' '}
-            <strong>{refactorIds.length} тест-кейсов</strong>
-          </p>
-          <p>
-            Проект: <strong>{project?.name}</strong>
-          </p>
-
-          {refactorIds.length > 0 && (
-            <div className={styles.selectedList}>
-              <h4>Выбранные тест-кейсы:</h4>
-              {testCases
-                .filter((tc) => refactorIds.includes(tc.id))
-                // .slice(0, 5) // Показываем только первые 5
-                .map((tc) => (
-                  <div key={tc.id} className={styles.selectedItem}>
-                    {tc.name} (ID: {tc.id})
-                  </div>
-                ))}
-              {refactorIds.length > 5 && (
-                <div className={styles.moreItems}>
-                  и еще {refactorIds.length - 5} тест-кейсов...
-                </div>
-              )}
+        <h3>Рефакторинг выбранных тест-кейсов</h3>
+        <p>
+          Будет оптимизировано ТК: <strong>{refactorIds.length}</strong>
+        </p>
+        {testCases
+          .filter((tc) => refactorIds.includes(tc.id))
+          // .slice(0, 5) // Показываем только первые 5
+          .map((tc) => (
+            <div key={tc.id} className={styles.selectedItem}>
+              {tc.name} (ID: {tc.id})
             </div>
-          )}
-
-          <div className={styles.checkboxSection}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={includeNegative}
-                onChange={(e) => setIncludeNegative(e.target.checked)}
-                className={styles.checkboxInput}
-              />
-              <span className={styles.checkboxCustom}></span>
-              Включая негативные тест-кейсы
-            </label>
-            <p className={styles.checkboxDescription}>
-              Также сгенерировать негативные сценарии для выбранных тест-кейсов
-            </p>
+          ))}
+        {refactorIds.length > 5 && (
+          <div className={styles.moreItems}>
+            и еще {refactorIds.length - 5} тест-кейсов...
           </div>
+        )}
 
-          <div className={styles.warningSection}>
-            <div className={styles.warningIcon}>⚠️</div>
-            <div className={styles.warningText}>
-              <p>
-                <strong>Внимание!</strong>
-              </p>
-              <p>
-                Рефакторинг может изменить структуру тест-кейсов. Убедитесь, что
-                это не повлияет на текущие тест-планы.
-              </p>
-            </div>
-          </div>
-
-          <p className={styles.dialogNote}>
-            Нажмите <strong>"Да"</strong> для запуска рефакторинга или{' '}
-            <strong>"Нет"</strong> для отмены.
-          </p>
-        </div>
+        <p className={styles.dialogNote}>
+          Нажмите <strong>"Да"</strong> для запуска рефакторинга или{' '}
+          <strong>"Нет"</strong> для отмены.
+        </p>
       </QuestionDialog>
     </div>
   )

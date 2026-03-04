@@ -7,10 +7,11 @@ import {
   ROLE_CONFIG,
   UserRole,
   DataPoolItem,
+  Project,
 } from '../../../../types/'
 import styles from './ProjectSettings.module.scss'
 import { useProject, useUser } from '@contexts/'
-import { Breadcrumbs } from '@components/'
+import { Breadcrumbs, QuestionDialog } from '@components/'
 import { PAGE_ENDPOINTS } from '@constants/'
 
 interface ProjectFormData {
@@ -25,7 +26,14 @@ const URL_REGEX = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
 export const ProjectSettings: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
-  const { updateProject, deleteProject, project } = useProject()
+  const {
+    updateProject,
+    deleteProject,
+    project,
+    checkAccess,
+    updateProjectUsers,
+    deleteProjectUsers,
+  } = useProject()
   const { setHeaderContent } = useHeaderStore()
 
   const {
@@ -46,17 +54,22 @@ export const ProjectSettings: React.FC = () => {
   } | null>(null)
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showUpdateUserModal, setshowUpdateUserModal] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [updatngUser, setUpdatingUser] = useState(false)
   const [newUser, setNewUser] = useState({
     email: '',
     role: UserRole.USER as UserRole,
   })
+  const [updatedUser, setUpdatedUser] = useState<ProjectUser>()
+  const [removeUserId, setRemoveUserId] = useState<number>(-1)
   const [dataPoolMode, setDataPoolMode] = useState<'upload' | 'manual'>(
     'manual'
   )
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [showQuestion, setShowQuestion] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [question, setQuestion] = useState(<></>)
   const { user } = useUser()
 
   const showNotification = useCallback(
@@ -109,12 +122,6 @@ export const ProjectSettings: React.FC = () => {
         (u: any) => u.email === user.profileData.email
       )
 
-      if (currentUserInProject) {
-        setIsAdmin(currentUserInProject.role == UserRole.PROJECT_ADMIN)
-      } else {
-        throw new Error("you're not supposed to be here")
-      }
-
       const savedDataPool = localStorage.getItem(
         `project_${projectId}_datapool`
       )
@@ -152,9 +159,10 @@ export const ProjectSettings: React.FC = () => {
         name: data.name,
         url: data.url,
         description: data.description,
-        dataPool: dataPool,
+        datapool: dataPool,
+        hasDatapool: dataPool && dataPool.length > 0,
         updatedAt: new Date(),
-      }
+      } satisfies Partial<Project>
 
       await updateProject(updateData)
 
@@ -183,7 +191,10 @@ export const ProjectSettings: React.FC = () => {
       JSON.stringify(validDataPool)
     )
     try {
-      await updateProject({ datapool: validDataPool })
+      await updateProject({
+        datapool: validDataPool,
+        hasDatapool: validDataPool && validDataPool.length > 0,
+      })
       showNotification('success', 'DataPool успешно сохранен')
     } catch (error) {
       showNotification('error', 'Ошибка при удалении проекта')
@@ -300,11 +311,10 @@ export const ProjectSettings: React.FC = () => {
         role: newUser.role,
         permissions: JSON.stringify(ROLE_CONFIG[newUser.role].permissions),
       }
-
       const updatedUsers = [...projectUsers, newUserData]
-      setProjectUsers(updatedUsers)
 
-      await updateProject({ users: updatedUsers })
+      await updateProjectUsers(updatedUsers)
+      setProjectUsers(updatedUsers)
 
       setShowAddUserModal(false)
       setNewUser({ email: '', role: UserRole.USER })
@@ -319,29 +329,40 @@ export const ProjectSettings: React.FC = () => {
   }
 
   const handleRemoveUser = async (userId: number) => {
-    if (!project || !projectId) return
-
-    const userToRemove = projectUsers.find((user) => user.id === userId)
-    if (!userToRemove) return
-
-    if (
-      !window.confirm(
-        `Вы уверены, что хотите удалить ${userToRemove.firstName} ${userToRemove.lastName} из проекта?`
-      )
-    ) {
-      return
-    }
-
     try {
       const updatedUsers = projectUsers.filter((user) => user.id !== userId)
+
+      await deleteProjectUsers([userId])
+
       setProjectUsers(updatedUsers)
-
-      await updateProject({ users: updatedUsers })
-
       showNotification('success', 'Пользователь удален из проекта')
+      setRemoveUserId(-1)
     } catch (error) {
       showNotification('error', 'Ошибка при удалении пользователя')
       console.error('Remove user error:', error)
+    }
+  }
+
+  const handleUpdateUser = async () => {
+    if (!updatedUser) {
+      return
+    }
+    setUpdatingUser(true)
+    try {
+      console.log(updatedUser)
+      const updatedUsers = projectUsers.map((user) =>
+        user.id === updatedUser.id ? updatedUser : user
+      )
+      await updateProjectUsers([updatedUser])
+
+      setProjectUsers(updatedUsers)
+      showNotification('success', 'Роль пользователя обновлена')
+      setshowUpdateUserModal(false)
+    } catch (error) {
+      showNotification('error', 'Ошибка при обновлении пользователя')
+      console.error('Update user error:', error)
+    } finally {
+      setUpdatingUser(false)
     }
   }
 
@@ -359,20 +380,12 @@ export const ProjectSettings: React.FC = () => {
     return null
   }
 
-  if (!isAdmin) {
+  if (!checkAccess([UserRole.PROJECT_ADMIN])) {
     return (
-      <div className={styles.projectSettings}>
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Доступ запрещен</h2>
-          <div style={{ textAlign: 'center' }}>
-            <button
-              type="button"
-              onClick={() => navigate(`/app/project/${projectId}`)}
-              className={styles.secondaryButton}
-            >
-              Вернуться к проекту
-            </button>
-          </div>
+      <div className={styles.pageContainer}>
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner}></div>
+          <p>Обратитесь к Администратору проекта для доступа к разделу</p>
         </div>
       </div>
     )
@@ -597,6 +610,24 @@ export const ProjectSettings: React.FC = () => {
           </div>
         </div>
 
+        <div className={styles.actionsContainer}>
+          <button
+            type="submit"
+            disabled={isSubmitting || !isDirty}
+            className={styles.primaryButton}
+          >
+            {isSubmitting ? 'Сохранение...' : 'Сохранить изменения'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            className={styles.dangerButton}
+          >
+            Удалить проект
+          </button>
+        </div>
+
         <div className={styles.section}>
           <div className={styles.teamHeader}>
             <h2 className={styles.sectionTitle}>Команда проекта</h2>
@@ -625,10 +656,29 @@ export const ProjectSettings: React.FC = () => {
                     <td>{`${user.lastName} ${user.firstName}`.trim()}</td>
                     <td>{user.email}</td>
                     <td>
-                      <div className={styles.roleBadge}>
+                      <select
+                        id="userRole"
+                        value={user.role}
+                        onChange={(e) => {
+                          setUpdatedUser({
+                            ...user,
+                            role: parseInt(e.target.value) as UserRole,
+                          })
+                          setshowUpdateUserModal(true)
+                        }}
+                        className={styles.roleBadge}
+                      >
+                        {Object.entries(ROLE_CONFIG).map(([value, config]) => (
+                          <option key={value} value={value}>
+                            {config.label}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* <div className={styles.roleBadge}>
                         {ROLE_CONFIG[user.role as UserRole]?.label ||
                           'Пользователь'}
-                      </div>
+                      </div> */}
                       <div className={styles.permissionsInfo}>
                         {ROLE_CONFIG[user.role as UserRole]?.description || ''}
                       </div>
@@ -636,14 +686,30 @@ export const ProjectSettings: React.FC = () => {
                     <td>
                       <button
                         type="button"
-                        onClick={() => handleRemoveUser(user.id)}
+                        onClick={() => {
+                          if (!project || !projectId) return
+
+                          const userToRemove = projectUsers.find(
+                            (el) => el.id === user.id
+                          )
+                          if (!userToRemove) return
+                          setQuestion(
+                            <>
+                              Вы уверены, что хотите удалить следующего
+                              пользователя из проекта? <br />
+                              {userToRemove.firstName} {userToRemove.lastName}
+                            </>
+                          )
+                          setShowQuestion(true)
+                          setRemoveUserId(user.id)
+                        }}
                         className={styles.dangerButton}
                         disabled={
                           user.role === UserRole.IT_LEADER ||
                           user.id === project?.createdBy
                         }
                       >
-                        Удалить
+                        {removeUserId === user.id ? "Удаляем..." : "Удалить"}
                       </button>
                     </td>
                   </tr>
@@ -656,24 +722,6 @@ export const ProjectSettings: React.FC = () => {
               <div>В проекте пока нет участников</div>
             </div>
           )}
-        </div>
-
-        <div className={styles.actionsContainer}>
-          <button
-            type="submit"
-            disabled={isSubmitting || !isDirty}
-            className={styles.primaryButton}
-          >
-            {isSubmitting ? 'Сохранение...' : 'Сохранить изменения'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowDeleteModal(true)}
-            className={styles.dangerButton}
-          >
-            Удалить проект
-          </button>
         </div>
       </form>
 
@@ -827,6 +875,67 @@ export const ProjectSettings: React.FC = () => {
           </div>
         </div>
       )}
+
+      {showUpdateUserModal && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => {
+            setshowUpdateUserModal(false)
+          }}
+        >
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className={styles.modalTitle}>Подтверждение изменения роли</h3>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="">Пользователь:</label>
+              <span>
+                {`${updatedUser?.lastName} ${updatedUser?.firstName} ${updatedUser?.fatherName}`}
+              </span>
+              <label htmlFor="" style={{ marginTop: '10px' }}>
+                Новая роль:
+              </label>
+              <span>
+                {ROLE_CONFIG[updatedUser?.role as UserRole]?.label ||
+                  'Пользователь'}
+              </span>
+            </div>
+
+            <div className={styles.modalButtons}>
+              <button
+                type="button"
+                onClick={() => {
+                  setshowUpdateUserModal(false)
+                }}
+                className={styles.secondaryButton}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={handleUpdateUser}
+                disabled={updatngUser}
+                className={styles.dangerButton}
+              >
+                Подтвердить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <QuestionDialog
+        showQuestion={showQuestion}
+        changeShowQuestion={setShowQuestion}
+        onYesClick={() => handleRemoveUser(removeUserId)}
+        onNoClick={() => {
+          setRemoveUserId(-1)
+          setQuestion(<></>)
+        }}
+      >
+        {question}
+      </QuestionDialog>
     </div>
   )
 }

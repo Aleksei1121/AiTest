@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TestCase, testCaseStatusMap } from '@interfaces/'
+import { TestCase, testCaseStatusMap, UserRole } from '@interfaces/'
 import { PAGE_ENDPOINTS } from '@constants/'
 import styles from './ProjectTestCaseTable.module.scss'
 import {
@@ -12,6 +12,7 @@ import {
   PlusIcon,
   ChevronRightIcon,
 } from '@components/'
+import { useProject } from '@contexts/'
 
 interface ProjectTestCaseTableProps {
   testCases: TestCase[]
@@ -30,6 +31,7 @@ export const ProjectTestCaseTable: React.FC<ProjectTestCaseTableProps> = ({
   onEditCase,
   projectBaseUrl,
 }) => {
+  const { checkAccess } = useProject()
   const navigate = useNavigate()
   const [displayCase, setDisplayCase] = useState<TestCase>()
   const [expandedRows, setExpandedRows] = useState<number[]>([])
@@ -269,16 +271,23 @@ export const ProjectTestCaseTable: React.FC<ProjectTestCaseTableProps> = ({
                       </a>
                     </td>
                     <td className={styles.actionsCell}>
-                      <button
-                        className={styles.iconButton}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onEditCase(parseInt(id))
-                        }}
-                        title="Редактировать"
-                      >
-                        <EditIcon />
-                      </button>
+                      {checkAccess([
+                        UserRole.TESTER,
+                        UserRole.PROJECT_ADMIN,
+                        UserRole.ANALYST,
+                        UserRole.AUTOMATOR,
+                      ]) && (
+                        <button
+                          className={styles.iconButton}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onEditCase(parseInt(id))
+                          }}
+                          title="Редактировать"
+                        >
+                          <EditIcon />
+                        </button>
+                      )}
                       <button
                         className={styles.iconButton}
                         onClick={(e) => {
@@ -458,37 +467,43 @@ export const ProjectTestCaseTable: React.FC<ProjectTestCaseTableProps> = ({
 
       {/* footer with actions */}
       <div className={styles.tableFooter}>
-        <div className={styles.footerActions}>
-          <button
-            className={`${styles.footerButton} ${styles.deleteButton}`}
-            onClick={handleDeleteSelected}
-            disabled={selectedForDelete.length === 0}
-          >
-            <span className={styles.buttonIcon}>
-              <DeleteIcon />
-            </span>
-            Удалить отмеченные ({selectedForDelete.length})
-          </button>
-          <button
-            className={`${styles.footerButton} ${styles.refactorButton}`}
-            onClick={handleRefactorSelected}
-            disabled={selectedForRefactor.length === 0}
-          >
-            <span className={styles.buttonIcon}>
-              <RefactorIcon />
-            </span>
-            Рефакторинг отмеченных ({selectedForRefactor.length})
-          </button>
-          <button
-            className={`${styles.footerButton} ${styles.primaryButton}`}
-            onClick={() => navigate(window.location.pathname + '/new')}
-          >
-            <span className={styles.buttonIcon}>
-              <PlusIcon />
-            </span>
-            Создать тест-кейс
-          </button>
-        </div>
+        {checkAccess([
+          UserRole.TESTER,
+          UserRole.PROJECT_ADMIN,
+          UserRole.ANALYST,
+        ]) && (
+          <div className={styles.footerActions}>
+            <button
+              className={`${styles.footerButton} ${styles.deleteButton}`}
+              onClick={handleDeleteSelected}
+              disabled={selectedForDelete.length === 0}
+            >
+              <span className={styles.buttonIcon}>
+                <DeleteIcon />
+              </span>
+              Удалить отмеченные ({selectedForDelete.length})
+            </button>
+            <button
+              className={`${styles.footerButton} ${styles.refactorButton}`}
+              onClick={handleRefactorSelected}
+              disabled={selectedForRefactor.length === 0}
+            >
+              <span className={styles.buttonIcon}>
+                <RefactorIcon />
+              </span>
+              Рефакторинг отмеченных ({selectedForRefactor.length})
+            </button>
+            <button
+              className={`${styles.footerButton} ${styles.primaryButton}`}
+              onClick={() => navigate(window.location.pathname + '/new')}
+            >
+              <span className={styles.buttonIcon}>
+                <PlusIcon />
+              </span>
+              Создать тест-кейс
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

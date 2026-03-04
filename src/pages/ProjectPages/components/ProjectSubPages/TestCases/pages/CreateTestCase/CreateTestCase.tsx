@@ -9,6 +9,7 @@ import {
   testCaseStatusMap,
   testCasePriorityMap,
   TestCase,
+  UserRole,
 } from '@interfaces/'
 import styles from './CreateTestCase.module.scss'
 import {
@@ -20,7 +21,7 @@ import {
 import { Breadcrumbs, QuestionDialog } from '@components/'
 
 export const CreateTestCase: React.FC = () => {
-  const { project } = useProject()
+  const { project, checkAccess } = useProject()
   const { createTestCase, isLoading: isCreating, allTestCases } = useTestCase()
   const { user: currentUser } = useUser()
   const { setHeaderContent } = useHeaderStore()
@@ -168,6 +169,19 @@ export const CreateTestCase: React.FC = () => {
     }
 
     return true
+  }
+
+  if (
+    !checkAccess([UserRole.TESTER, UserRole.PROJECT_ADMIN, UserRole.ANALYST])
+  ) {
+    return (
+      <div className={styles.pageContainer}>
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner}></div>
+          <p>Обратитесь к Администратору проекта для доступа к разделу</p>
+        </div>
+      </div>
+    )
   }
 
   return (

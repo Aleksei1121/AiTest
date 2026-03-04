@@ -1,4 +1,5 @@
 import { TestPlanRunShort } from './testPlan'
+import { UserRole } from './user'
 
 export interface ProjectMinimal {
   id: number
@@ -12,7 +13,7 @@ export interface ProjectUser {
   lastName: string
   fatherName: string | null
   email: string
-  role: 0 | 1 | 2 | 3 | 4 | 5
+  role: UserRole
   permissions: string
 }
 
@@ -53,9 +54,13 @@ export interface ProjectContextType {
   error: string | null
   loadProject: (projectId: number) => Promise<void>
   updateProject: (updates: Partial<Project>) => Promise<void>
+  deleteProjectUsers: (ids: number[]) => Promise<void>
+  updateProjectUsers: (users: ProjectUser[]) => Promise<void>
   clearProject: () => void
   clearError: () => void
   deleteProject: () => Promise<void>
+  getRole: () => UserRole | undefined
+  checkAccess: (acceptedRoles: UserRole[]) => boolean
 }
 
 export interface TestCaseHistoryRecord {

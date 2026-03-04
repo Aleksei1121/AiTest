@@ -4,7 +4,7 @@ import { PAGE_ENDPOINTS } from '@constants/'
 import { useProject, useTestPlan } from '@contexts/'
 import { useHeaderStore } from '@stores/'
 import { Link } from 'react-router-dom'
-import { TestPlan, TestPlanRun } from '@interfaces/'
+import { TestPlan, TestPlanRun, UserRole } from '@interfaces/'
 import styles from './TestPlanDetails.module.scss'
 import {
   EditIcon,
@@ -13,22 +13,22 @@ import {
   DeleteIcon,
   PlusIcon,
   ChevronRightIcon,
-  PlayIcon,      
+  PlayIcon,
   CloneIcon,
-  Breadcrumbs,     
+  Breadcrumbs,
 } from '@components/'
 
 export const TestPlanDetails: React.FC = () => {
-  const { project } = useProject()
+  const { project, checkAccess } = useProject()
   const { testPlanId } = useParams<{ testPlanId: string }>()
-  const { 
-    testPlan, 
-    testPlanRuns, 
-    loadTestPlan, 
-    loadTestPlanRuns, 
+  const {
+    testPlan,
+    testPlanRuns,
+    loadTestPlan,
+    loadTestPlanRuns,
     runTestPlan,
     cloneTestPlan,
-    isLoading 
+    isLoading,
   } = useTestPlan()
   const { setHeaderContent } = useHeaderStore()
   const navigate = useNavigate()
@@ -39,7 +39,7 @@ export const TestPlanDetails: React.FC = () => {
     if (project && testPlanId) {
       const projectId = project.id
       const testPlanIdNum = parseInt(testPlanId)
-      
+
       loadTestPlan(projectId, testPlanIdNum)
       loadTestPlanRuns(projectId, testPlanIdNum)
     }
@@ -54,7 +54,10 @@ export const TestPlanDetails: React.FC = () => {
   useEffect(() => {
     if (testPlanRuns && testPlanRuns.length > 0) {
       const sortedRuns = [...testPlanRuns]
-        .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+        .sort(
+          (a, b) =>
+            new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+        )
         .slice(0, 3)
       setRecentRuns(sortedRuns)
     }
@@ -81,7 +84,7 @@ export const TestPlanDetails: React.FC = () => {
                 PAGE_ENDPOINTS.PROJECT_PARTS.TEST_PLAN,
             },
             {
-              text: localTestPlan.name
+              text: localTestPlan.name,
             },
           ]}
         />
@@ -91,10 +94,12 @@ export const TestPlanDetails: React.FC = () => {
 
   const handleRunTestPlan = async () => {
     if (!project || !localTestPlan) return
-    
-    const confirm = window.confirm(`Запустить тест-план "${localTestPlan.name}"?`)
+
+    const confirm = window.confirm(
+      `Запустить тест-план "${localTestPlan.name}"?`
+    )
     if (!confirm) return
-    
+
     try {
       await runTestPlan(project.id, localTestPlan.id)
       alert('Тест-план запущен!')
@@ -107,10 +112,12 @@ export const TestPlanDetails: React.FC = () => {
 
   const handleCloneTestPlan = async () => {
     if (!project || !localTestPlan) return
-    
-    const confirm = window.confirm(`Клонировать тест-план "${localTestPlan.name}"?`)
+
+    const confirm = window.confirm(
+      `Клонировать тест-план "${localTestPlan.name}"?`
+    )
     if (!confirm) return
-    
+
     try {
       await cloneTestPlan(project.id, localTestPlan.id)
       alert('Тест-план клонирован!')
@@ -130,11 +137,16 @@ export const TestPlanDetails: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'успешно': return styles.successStatus
-      case 'с_ошибками': return styles.errorStatus
-      case 'запланирован': return styles.plannedStatus
-      case 'в_работе': return styles.runningStatus
-      default: return styles.defaultStatus
+      case 'успешно':
+        return styles.successStatus
+      case 'с_ошибками':
+        return styles.errorStatus
+      case 'запланирован':
+        return styles.plannedStatus
+      case 'в_работе':
+        return styles.runningStatus
+      default:
+        return styles.defaultStatus
     }
   }
 
@@ -155,30 +167,40 @@ export const TestPlanDetails: React.FC = () => {
         <div className={styles.headerTop}>
           <h1>{localTestPlan.name}</h1>
           <div className={styles.headerActions}>
-            <button
-              className={`${styles.actionButton} ${styles.runButton}`}
-              onClick={handleRunTestPlan}
-            >
-              <PlayIcon className={styles.buttonIcon} /> 
-              Запустить тест-план
-            </button>
-            <button
-              className={`${styles.actionButton} ${styles.editButton}`}
-              onClick={() => navigate(`edit`)}
-            >
-              <EditIcon className={styles.buttonIcon} />
-              Редактировать
-            </button>
-            <button
-              className={`${styles.actionButton} ${styles.cloneButton}`}
-              onClick={handleCloneTestPlan}
-            >
-              <CloneIcon className={styles.buttonIcon} /> 
-              Клонировать
-            </button>
+            {checkAccess([
+              UserRole.TESTER,
+              UserRole.ANALYST,
+              UserRole.PROJECT_ADMIN,
+            ]) && (
+              <button
+                className={`${styles.actionButton} ${styles.runButton}`}
+                onClick={handleRunTestPlan}
+              >
+                <PlayIcon className={styles.buttonIcon} />
+                Запустить тест-план
+              </button>
+            )}
+            {checkAccess([UserRole.ANALYST, UserRole.PROJECT_ADMIN]) && (
+              <>
+                <button
+                  className={`${styles.actionButton} ${styles.editButton}`}
+                  onClick={() => navigate(`edit`)}
+                >
+                  <EditIcon className={styles.buttonIcon} />
+                  Редактировать
+                </button>
+                <button
+                  className={`${styles.actionButton} ${styles.cloneButton}`}
+                  onClick={handleCloneTestPlan}
+                >
+                  <CloneIcon className={styles.buttonIcon} />
+                  Клонировать
+                </button>
+              </>
+            )}
           </div>
         </div>
-        
+
         <div className={styles.testPlanInfo}>
           <div className={styles.infoGrid}>
             <div className={styles.infoItem}>
@@ -191,13 +213,17 @@ export const TestPlanDetails: React.FC = () => {
             </div>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Статус:</span>
-              <span className={`${styles.infoValue} ${styles.statusBadge} ${getStatusColor(localTestPlan.status)}`}>
+              <span
+                className={`${styles.infoValue} ${styles.statusBadge} ${getStatusColor(localTestPlan.status)}`}
+              >
                 {localTestPlan.status}
               </span>
             </div>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Владелец:</span>
-              <span className={styles.infoValue}>{localTestPlan.owner?.username || 'Не указан'}</span>
+              <span className={styles.infoValue}>
+                {localTestPlan.owner?.username || 'Не указан'}
+              </span>
             </div>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Дата создания:</span>
@@ -208,24 +234,31 @@ export const TestPlanDetails: React.FC = () => {
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Последний запуск:</span>
               <span className={styles.infoValue}>
-                {localTestPlan.lastRunAt 
-                  ? new Date(localTestPlan.lastRunAt).toLocaleDateString('ru-RU')
-                  : 'Не запускался'
-                }
+                {localTestPlan.lastRunAt
+                  ? new Date(localTestPlan.lastRunAt).toLocaleDateString(
+                      'ru-RU'
+                    )
+                  : 'Не запускался'}
               </span>
             </div>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Длительность:</span>
-              <span className={styles.infoValue}>{formatDuration(localTestPlan.duration)}</span>
+              <span className={styles.infoValue}>
+                {formatDuration(localTestPlan.duration)}
+              </span>
             </div>
             <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Статус последнего запуска:</span>
-              <span className={`${styles.infoValue} ${styles.statusBadge} ${getStatusColor(localTestPlan.lastRunStatus)}`}>
+              <span className={styles.infoLabel}>
+                Статус последнего запуска:
+              </span>
+              <span
+                className={`${styles.infoValue} ${styles.statusBadge} ${getStatusColor(localTestPlan.lastRunStatus)}`}
+              >
                 {localTestPlan.lastRunStatus}
               </span>
             </div>
           </div>
-          
+
           {localTestPlan.description && (
             <div className={styles.descriptionSection}>
               <h3>Описание</h3>
@@ -239,14 +272,14 @@ export const TestPlanDetails: React.FC = () => {
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2>История запусков (последние 3)</h2>
-            <button 
+            <button
               className={styles.viewAllButton}
               onClick={() => navigate('runs')}
             >
               Весь журнал <ChevronRightIcon className={styles.chevronIcon} />
             </button>
           </div>
-          
+
           {recentRuns.length > 0 ? (
             <div className={styles.runsTable}>
               <table>
@@ -266,7 +299,9 @@ export const TestPlanDetails: React.FC = () => {
                       <td>{run.id}</td>
                       <td>{new Date(run.startedAt).toLocaleString('ru-RU')}</td>
                       <td>
-                        <span className={`${styles.runStatus} ${getStatusColor(run.status)}`}>
+                        <span
+                          className={`${styles.runStatus} ${getStatusColor(run.status)}`}
+                        >
                           {run.status}
                         </span>
                       </td>
@@ -295,7 +330,7 @@ export const TestPlanDetails: React.FC = () => {
 
         <div className={styles.section}>
           <h2>Тест-кейсы в плане ({localTestPlan.testCaseCount})</h2>
-          
+
           {localTestPlan.testCases && localTestPlan.testCases.length > 0 ? (
             <div className={styles.testCasesList}>
               {localTestPlan.testCases.map((testCase, index) => (

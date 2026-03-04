@@ -1,6 +1,6 @@
 import { PAGE_ENDPOINTS } from '@constants/'
 import { useProject, useTestCase, useTestPlan } from '@contexts/'
-import { TestPlan, TestPlanUpdateData, TestCaseInTestPlan, TestCase } from '@interfaces/'
+import { TestPlan, TestPlanUpdateData, TestCaseInTestPlan, TestCase, UserRole } from '@interfaces/'
 import { useHeaderStore } from '@stores/'
 import React, { Fragment, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -16,7 +16,7 @@ interface TestPlanForm {
 }
 
 export const RedactTestPlan: React.FC = () => {
-  const { project } = useProject()
+  const { project, checkAccess } = useProject()
   const { allTestPlans: testPlans, updateTestPlan, createTestPlan } = useTestPlan()
   const {allTestCases, loadAllTestCases} = useTestCase()
   const { setHeaderContent } = useHeaderStore()
@@ -231,6 +231,22 @@ export const RedactTestPlan: React.FC = () => {
       console.error('Ошибка при создании новой версии:', error)
       alert('Произошла ошибка при создании новой версии')
     }
+  }
+
+  if (
+    !checkAccess([
+      UserRole.PROJECT_ADMIN,
+      UserRole.ANALYST,
+    ])
+  ) {
+    return (
+      <div className={styles.pageContainer}>
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner}></div>
+          <p>Обратитесь к Администратору проекта для доступа к разделу</p>
+        </div>
+      </div>
+    )
   }
 
   if (!project) {

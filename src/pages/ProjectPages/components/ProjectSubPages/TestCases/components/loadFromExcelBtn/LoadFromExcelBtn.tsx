@@ -142,7 +142,7 @@ export const LoadFromExcelBtn: React.FC<{
           accept=".xls, .xlsx"
           onChange={handleLoadFile}
         />
-        <label htmlFor="excel_input"> {file ? "Еще чуть-чуть" : "Импорт тест-кейсов из Exel"}</label>
+        <label htmlFor="excel_input"> {file ? "Еще чуть-чуть" : "Импорт тест-кейсов"}</label>
       </div>
       <QuestionDialog
         showQuestion={openDiag}

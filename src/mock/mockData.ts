@@ -6,6 +6,8 @@ import {
   User,
   TestPlan,
   TestPlanRun,
+  ScriptRun,
+  Script,
 } from '@interfaces/'
 
 export const mockUsers: User[] = [

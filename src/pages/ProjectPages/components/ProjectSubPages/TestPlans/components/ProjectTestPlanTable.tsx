@@ -1,6 +1,11 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TestPlan, testPlanStatusMap, testPlanLastRunStatusMap } from '@interfaces/'
+import {
+  TestPlan,
+  testPlanStatusMap,
+  testPlanLastRunStatusMap,
+  UserRole,
+} from '@interfaces/'
 import { PAGE_ENDPOINTS } from '@constants/'
 import styles from './ProjectTestPlanTable.module.scss'
 import {
@@ -11,8 +16,9 @@ import {
   PlusIcon,
   ChevronRightIcon,
   CloneIcon,
-  PlayIcon, 
+  PlayIcon,
 } from '@components/'
+import { useProject } from '@contexts/'
 
 interface ProjectTestPlanTableProps {
   testPlans: TestPlan[]
@@ -35,6 +41,7 @@ export const ProjectTestPlanTable: React.FC<ProjectTestPlanTableProps> = ({
   onViewDetails,
   projectBaseUrl,
 }) => {
+  const { checkAccess } = useProject()
   const navigate = useNavigate()
   const [expandedRows, setExpandedRows] = useState<number[]>([])
   const [selectedForDelete, setSelectedForDelete] = useState<number[]>([])
@@ -48,8 +55,7 @@ export const ProjectTestPlanTable: React.FC<ProjectTestPlanTableProps> = ({
       acc[testPlan.id].push(testPlan)
       acc[testPlan.id].sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
       return acc
     },
@@ -261,7 +267,9 @@ export const ProjectTestPlanTable: React.FC<ProjectTestPlanTableProps> = ({
                       {latestVersion.lastRunAt ? (
                         <div className={styles.lastRunInfo}>
                           <div className={styles.lastRunDate}>
-                            {new Date(latestVersion.lastRunAt).toLocaleDateString()}
+                            {new Date(
+                              latestVersion.lastRunAt
+                            ).toLocaleDateString()}
                           </div>
                           <div className={styles.lastRunDuration}>
                             {formatDuration(latestVersion.duration)}
@@ -277,27 +285,34 @@ export const ProjectTestPlanTable: React.FC<ProjectTestPlanTableProps> = ({
                           styles[`status${latestVersion.lastRunStatus}`]
                         }`}
                       >
-                        {testPlanLastRunStatusMap[latestVersion.lastRunStatus as keyof typeof testPlanLastRunStatusMap] || latestVersion.lastRunStatus}
+                        {testPlanLastRunStatusMap[
+                          latestVersion.lastRunStatus as keyof typeof testPlanLastRunStatusMap
+                        ] || latestVersion.lastRunStatus}
                       </span>
                     </td>
                     <td className={styles.actionsCell}>
+                      {checkAccess([
+                        UserRole.ANALYST,
+                        UserRole.PROJECT_ADMIN,
+                      ]) && (
+                        <button
+                          className={styles.iconButton}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            onEditPlan(parseInt(id))
+                          }}
+                          title="Редактировать"
+                        >
+                          <EditIcon />
+                        </button>
+                      )}
                       <button
                         className={styles.iconButton}
                         onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onEditPlan(parseInt(id));
-                        }}
-                        title="Редактировать"
-                      >
-                        <EditIcon />
-                      </button>
-                      <button
-                        className={styles.iconButton}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onOpenHistory(parseInt(id));
+                          e.preventDefault()
+                          e.stopPropagation()
+                          onOpenHistory(parseInt(id))
                         }}
                         title="Журнал запусков"
                       >
@@ -306,25 +321,30 @@ export const ProjectTestPlanTable: React.FC<ProjectTestPlanTableProps> = ({
                       <button
                         className={styles.iconButton}
                         onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onViewDetails(parseInt(id));
+                          e.preventDefault()
+                          e.stopPropagation()
+                          onViewDetails(parseInt(id))
                         }}
                         title="Просмотреть детали"
                       >
                         <EyeIcon />
                       </button>
-                      <button
-                        className={styles.iconButton}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onClone([parseInt(id)]);
-                        }}
-                        title="Клонировать"
-                      >
-                        <CloneIcon />
-                      </button>
+                      {checkAccess([
+                        UserRole.ANALYST,
+                        UserRole.PROJECT_ADMIN,
+                      ]) && (
+                        <button
+                          className={styles.iconButton}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            onClone([parseInt(id)])
+                          }}
+                          title="Клонировать"
+                        >
+                          <CloneIcon />
+                        </button>
+                      )}
                     </td>
                   </tr>
 
@@ -422,46 +442,56 @@ export const ProjectTestPlanTable: React.FC<ProjectTestPlanTableProps> = ({
                                   Статус тест-плана:
                                 </span>
                                 <span>
-                                  {testPlanStatusMap[latestVersion.status as keyof typeof testPlanStatusMap]}
+                                  {
+                                    testPlanStatusMap[
+                                      latestVersion.status as keyof typeof testPlanStatusMap
+                                    ]
+                                  }
                                 </span>
                               </div>
                             </div>
                           </div>
 
-                          {latestVersion.testCases && latestVersion.testCases.length > 0 && (
-                            <div className={styles.detailsSection}>
-                              <h4>Тест-кейсы в плане</h4>
-                              <div className={styles.testCasesList}>
-                                {latestVersion.testCases.slice(0, 5).map((tc, index) => (
-                                  <div
-                                    key={tc.testCase.id}
-                                    className={styles.testCaseItem}
-                                    onClick={() =>
-                                      tc.testCase?.id &&
-                                      navigate(
-                                        `${projectBaseUrl}/${PAGE_ENDPOINTS.PROJECT_PARTS.TEST_CASE}/${tc.testCase.id}`
-                                      )
-                                    }
-                                  >
-                                    <span className={styles.testCaseName}>
-                                      {tc.testCase?.name || `Тест-кейс ${index + 1}`}
-                                    </span>
-                                    {tc.testCase?.version && (
-                                      <span className={styles.testCaseVersion}>
-                                        v{tc.testCase.version}
-                                      </span>
-                                    )}
-                                  </div>
-                                ))}
-                                {latestVersion.testCases.length > 5 && (
-                                  <div className={styles.moreTestCases}>
-                                    и ещё {latestVersion.testCases.length - 5}{' '}
-                                    тест-кейсов...
-                                  </div>
-                                )}
+                          {latestVersion.testCases &&
+                            latestVersion.testCases.length > 0 && (
+                              <div className={styles.detailsSection}>
+                                <h4>Тест-кейсы в плане</h4>
+                                <div className={styles.testCasesList}>
+                                  {latestVersion.testCases
+                                    .slice(0, 5)
+                                    .map((tc, index) => (
+                                      <div
+                                        key={tc.testCase.id}
+                                        className={styles.testCaseItem}
+                                        onClick={() =>
+                                          tc.testCase?.id &&
+                                          navigate(
+                                            `${projectBaseUrl}/${PAGE_ENDPOINTS.PROJECT_PARTS.TEST_CASE}/${tc.testCase.id}`
+                                          )
+                                        }
+                                      >
+                                        <span className={styles.testCaseName}>
+                                          {tc.testCase?.name ||
+                                            `Тест-кейс ${index + 1}`}
+                                        </span>
+                                        {tc.testCase?.version && (
+                                          <span
+                                            className={styles.testCaseVersion}
+                                          >
+                                            v{tc.testCase.version}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  {latestVersion.testCases.length > 5 && (
+                                    <div className={styles.moreTestCases}>
+                                      и ещё {latestVersion.testCases.length - 5}{' '}
+                                      тест-кейсов...
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                       </td>
                     </tr>
@@ -481,33 +511,43 @@ export const ProjectTestPlanTable: React.FC<ProjectTestPlanTableProps> = ({
 
       <div className={styles.tableFooter}>
         <div className={styles.footerActions}>
-          <button
-            className={`${styles.footerButton} ${styles.runButton}`}
-            onClick={handleRunSelected}
-            disabled={selectedForRun.length === 0}
-          >
-            <PlayIcon className={styles.buttonIcon} />
-            Запустить отмеченные ({selectedForRun.length})
-          </button>
-          <button
-            className={`${styles.footerButton} ${styles.deleteButton}`}
-            onClick={handleDeleteSelected}
-            disabled={selectedForDelete.length === 0}
-          >
-            <span className={styles.buttonIcon}>
-              <DeleteIcon />
-            </span>
-            Удалить отмеченные ({selectedForDelete.length})
-          </button>
-          <button
-            className={`${styles.footerButton} ${styles.primaryButton}`}
-            onClick={() => navigate(window.location.pathname + '/new')}
-          >
-            <span className={styles.buttonIcon}>
-              <PlusIcon />
-            </span>
-            Создать тест-план
-          </button>
+          {checkAccess([
+            UserRole.TESTER,
+            UserRole.ANALYST,
+            UserRole.PROJECT_ADMIN,
+          ]) && (
+            <button
+              className={`${styles.footerButton} ${styles.runButton}`}
+              onClick={handleRunSelected}
+              disabled={selectedForRun.length === 0}
+            >
+              <PlayIcon className={styles.buttonIcon} />
+              Запустить отмеченные ({selectedForRun.length})
+            </button>
+          )}
+          {checkAccess([UserRole.ANALYST, UserRole.PROJECT_ADMIN]) && (
+            <>
+              <button
+                className={`${styles.footerButton} ${styles.deleteButton}`}
+                onClick={handleDeleteSelected}
+                disabled={selectedForDelete.length === 0}
+              >
+                <span className={styles.buttonIcon}>
+                  <DeleteIcon />
+                </span>
+                Удалить отмеченные ({selectedForDelete.length})
+              </button>
+              <button
+                className={`${styles.footerButton} ${styles.primaryButton}`}
+                onClick={() => navigate(window.location.pathname + '/new')}
+              >
+                <span className={styles.buttonIcon}>
+                  <PlusIcon />
+                </span>
+                Создать тест-план
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
