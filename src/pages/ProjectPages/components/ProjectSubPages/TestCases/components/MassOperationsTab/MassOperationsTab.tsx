@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import styles from './MassOperationsTab.module.scss'
 import { QuestionDialog } from '@components/'
 import { useProject } from '@contexts/'
+import { UserRole } from '@interfaces/'
 
 interface MassOperationsTabProps {
   totalTCPositive: number
@@ -22,7 +23,7 @@ export const MassOperationsTab: React.FC<MassOperationsTabProps> = ({
   onGenerateNew,
   onRefactorAll,
 }) => {
-  const { project } = useProject()
+  const { project, checkAccess } = useProject()
   const [showGenerateAllDialog, setShowGenerateAllDialog] = useState(false)
   const [showGenerateNewDialog, setShowGenerateNewDialog] = useState(false)
   const [showRefactorAllDialog, setShowRefactorAllDialog] = useState(false)
@@ -45,14 +46,17 @@ export const MassOperationsTab: React.FC<MassOperationsTabProps> = ({
     setShowRefactorAllDialog(false)
   }
 
-  // Проверка прав доступа (заглушка - нужно заменить на реальную проверку)
-  const isAdmin = true // TODO: Заменить на проверку прав пользователя
-
-  if (!isAdmin) {
+  if (
+    !checkAccess([
+      UserRole.TESTER, UserRole.PROJECT_ADMIN, UserRole.ANALYST
+    ])
+  ) {
     return (
-      <div className={styles.noAccess}>
-        <h3>Доступ ограничен</h3>
-        <p>Операции с тест-кейсами доступны только администраторам проекта.</p>
+      <div className={styles.pageContainer}>
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner}></div>
+          <p>Обратитесь к Администратору проекта для доступа к разделу</p>
+        </div>
       </div>
     )
   }
@@ -75,7 +79,7 @@ export const MassOperationsTab: React.FC<MassOperationsTabProps> = ({
             </span>
             <span className={styles.statItem}>
               Негативных ТК: {totalTCNegative}
-            </span>     
+            </span>
           </div>
           <button
             className={styles.primaryButton}
@@ -115,8 +119,8 @@ export const MassOperationsTab: React.FC<MassOperationsTabProps> = ({
         <div className={styles.operationCard}>
           <h3>Рефакторинг всех тест-кейсов</h3>
           <p>
-            Пересматривает проект и создает тест-кейсы по 
-            новому/изменившемуся функционалу
+            Пересматривает проект и создает тест-кейсы по новому/изменившемуся
+            функционалу
           </p>
           <div className={styles.stats}>
             <span className={styles.statItem}>

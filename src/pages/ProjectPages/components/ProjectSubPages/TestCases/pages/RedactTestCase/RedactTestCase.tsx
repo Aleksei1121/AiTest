@@ -6,6 +6,7 @@ import {
   testCaseStatusMap,
   testCasePriorityMap,
   TestCaseStep,
+  UserRole,
 } from '@interfaces/'
 import { useHeaderStore } from '@stores/'
 import React, { useEffect, useState } from 'react'
@@ -59,7 +60,7 @@ interface TestCaseFormData {
 }
 
 export const RedactTestCase: React.FC = () => {
-  const { project } = useProject()
+  const { project, checkAccess } = useProject()
   const { allTestCases: testCases, updateTestCase } = useTestCase()
   const { user: currentUser } = useUser()
   const { setHeaderContent } = useHeaderStore()
@@ -278,6 +279,25 @@ export const RedactTestCase: React.FC = () => {
     return true
   }
 
+  if (
+    !checkAccess([
+      UserRole.TESTER,
+      UserRole.PROJECT_ADMIN,
+      UserRole.ANALYST,
+      UserRole.AUTOMATOR,
+      UserRole.IT_LEADER,
+    ])
+  ) {
+    return (
+      <div className={styles.pageContainer}>
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner}></div>
+          <p>Обратитесь к Администратору проекта для доступа к разделу</p>
+        </div>
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className={styles.pageContainer}>
@@ -315,26 +335,46 @@ export const RedactTestCase: React.FC = () => {
             )}
           </h2>
           <div className={styles.formActionsTop}>
-            <button
-              type="submit"
-              className={`${styles.actionButton} ${styles.primaryButton}`}
-              disabled={isSubmitting}
-            >
-              {isSubmitting
-                ? 'Сохранение...'
-                : isEditMode
-                  ? 'Сохранить изменения'
-                  : 'Создать тест-кейс'}
-            </button>
-            {isEditMode && (
+            {checkAccess([
+              UserRole.TESTER,
+              UserRole.PROJECT_ADMIN,
+              UserRole.ANALYST,
+            ]) && (
               <button
-                type="button"
-                className={`${styles.actionButton} ${styles.secondaryButton}`}
-                onClick={() => setShowStopCreatingDiag(true)}
+                type="submit"
+                className={`${styles.actionButton} ${styles.primaryButton}`}
+                disabled={
+                  isSubmitting ||
+                  !checkAccess([
+                    UserRole.TESTER,
+                    UserRole.PROJECT_ADMIN,
+                    UserRole.ANALYST,
+                    UserRole.AUTOMATOR,
+                  ])
+                }
               >
-                Сохранить как новую версию
+                {isSubmitting
+                  ? 'Сохранение...'
+                  : isEditMode
+                    ? 'Сохранить изменения'
+                    : 'Создать тест-кейс'}
               </button>
             )}
+            {isEditMode &&
+              checkAccess([
+                UserRole.AUTOMATOR,
+                UserRole.TESTER,
+                UserRole.PROJECT_ADMIN,
+                UserRole.ANALYST,
+              ]) && (
+                <button
+                  type="button"
+                  className={`${styles.actionButton} ${styles.secondaryButton}`}
+                  onClick={() => setShowStopCreatingDiag(true)}
+                >
+                  Сохранить как новую версию
+                </button>
+              )}
             <button
               type="button"
               className={`${styles.actionButton} ${styles.cancelButton}`}
@@ -481,7 +521,7 @@ export const RedactTestCase: React.FC = () => {
                     value={field.value?.toString() || '-1'}
                     onChange={(e) =>
                       field.onChange(parseInt(e.target.value, 10))
-                    } 
+                    }
                   >
                     <option value={-1}>нет</option>
                     {testCases
@@ -638,7 +678,15 @@ export const RedactTestCase: React.FC = () => {
               <StepsEditor
                 steps={field.value}
                 onChange={field.onChange}
-                disabled={isSubmitting}
+                disabled={
+                  isSubmitting ||
+                  !checkAccess([
+                    UserRole.TESTER,
+                    UserRole.PROJECT_ADMIN,
+                    UserRole.ANALYST,
+                    UserRole.AUTOMATOR,
+                  ])
+                }
                 setDeleteStepFunc={setDeleteStepFunc}
                 setOpenDiag={setShowDeleteStepDiag}
               />
@@ -655,7 +703,15 @@ export const RedactTestCase: React.FC = () => {
               <TestDataEditor
                 testData={field.value}
                 onChange={field.onChange}
-                disabled={isSubmitting}
+                disabled={
+                  isSubmitting ||
+                  !checkAccess([
+                    UserRole.TESTER,
+                    UserRole.PROJECT_ADMIN,
+                    UserRole.ANALYST,
+                    UserRole.AUTOMATOR,
+                  ])
+                }
               />
             )}
           />
@@ -670,7 +726,15 @@ export const RedactTestCase: React.FC = () => {
               <AttachmentsManager
                 attachments={field.value}
                 onChange={field.onChange}
-                disabled={isSubmitting}
+                disabled={
+                  isSubmitting ||
+                  !checkAccess([
+                    UserRole.TESTER,
+                    UserRole.PROJECT_ADMIN,
+                    UserRole.ANALYST,
+                    UserRole.AUTOMATOR,
+                  ])
+                }
               />
             )}
           />
@@ -733,26 +797,46 @@ export const RedactTestCase: React.FC = () => {
 
         {/* Кнопки внизу формы */}
         <div className={styles.formActionsBottom}>
-          <button
-            type="submit"
-            className={`${styles.actionButton} ${styles.primaryButton}`}
-            disabled={isSubmitting}
-          >
-            {isSubmitting
-              ? 'Сохранение...'
-              : isEditMode
-                ? 'Сохранить изменения'
-                : 'Создать тест-кейс'}
-          </button>
-          {isEditMode && (
+          {checkAccess([
+            UserRole.TESTER,
+            UserRole.PROJECT_ADMIN,
+            UserRole.ANALYST,
+          ]) && (
             <button
-              type="button"
-              className={`${styles.actionButton} ${styles.secondaryButton}`}
-              onClick={() => setShowStopCreatingDiag(true)}
+              type="submit"
+              className={`${styles.actionButton} ${styles.primaryButton}`}
+              disabled={
+                isSubmitting ||
+                !checkAccess([
+                  UserRole.TESTER,
+                  UserRole.PROJECT_ADMIN,
+                  UserRole.ANALYST,
+                  UserRole.AUTOMATOR,
+                ])
+              }
             >
-              Сохранить как новую версию
+              {isSubmitting
+                ? 'Сохранение...'
+                : isEditMode
+                  ? 'Сохранить изменения'
+                  : 'Создать тест-кейс'}
             </button>
           )}
+          {isEditMode &&
+            checkAccess([
+              UserRole.AUTOMATOR,
+              UserRole.TESTER,
+              UserRole.PROJECT_ADMIN,
+              UserRole.ANALYST,
+            ]) && (
+              <button
+                type="button"
+                className={`${styles.actionButton} ${styles.secondaryButton}`}
+                onClick={() => setShowStopCreatingDiag(true)}
+              >
+                Сохранить как новую версию
+              </button>
+            )}
           <button
             type="button"
             className={`${styles.actionButton} ${styles.cancelButton}`}

@@ -1,4 +1,4 @@
-import { Project, ProjectMinimal, TestPlanRun, User } from '@interfaces/'
+import { Project, ProjectMinimal, ProjectUser, TestPlanRun, User } from '@interfaces/'
 import { apiClient } from '@api'
 
 import { API_URL } from '@constants/'
@@ -45,6 +45,28 @@ class ProjectsApi {
     const response = await apiClient.patch<Project>(
       `${API_URL.PROJECTS}/${projectId}/`,
       updates
+    )
+    return response
+  }
+
+  async updateProjectUsers(
+    projectId: number,
+    users: ProjectUser[]
+  ): Promise<Project> {
+    const response = await apiClient.patch<Project>(
+      `${API_URL.PROJECTS}/${projectId}/`,
+      users
+    )
+    return response
+  }
+
+  async deleteProjectUsers(
+    projectId: number,
+    users: number[]
+  ): Promise<Project> {
+    const response = await apiClient.patch<Project>(
+      `${API_URL.PROJECTS}/${projectId}/`,
+      users
     )
     return response
   }

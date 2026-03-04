@@ -54,7 +54,7 @@ export const useSidebarNavigation = () => {
             requireAuth: true,
           },
           {
-            title: 'Тест-план',
+            title: 'Тест-планы',
             link: `${PAGE_ENDPOINTS.OUTLET}/${PAGE_ENDPOINTS.PROJECT}/${project.id}/${PAGE_ENDPOINTS.PROJECT_PARTS.TEST_PLAN}`,
             requireAuth: true,
           },
